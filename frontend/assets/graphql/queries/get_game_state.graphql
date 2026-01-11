@@ -1,0 +1,36 @@
+query GetGameState {
+  getGameState {
+    gameId
+    players {
+      chainId
+      name
+      diceCount
+      eliminated
+      isTurn
+      commitment {
+        hash
+        revealed
+      }
+      revealedDice {
+        dice
+        count
+      }
+    }
+    phase
+    round
+    currentTurn
+    currentBid {
+      quantity
+      face
+      bidder
+    }
+    bidHistory {
+      quantity
+      face
+      bidder
+    }
+    liarCaller
+    totalDice
+    winner
+  }
+}

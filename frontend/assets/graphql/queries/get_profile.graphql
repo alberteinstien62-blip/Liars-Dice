@@ -1,0 +1,13 @@
+query GetUserProfile {
+  getUserProfile {
+    chainId
+    name
+    elo
+    stats {
+      gamesPlayed
+      gamesWon
+      roundsPlayed
+      roundsWon
+    }
+  }
+}

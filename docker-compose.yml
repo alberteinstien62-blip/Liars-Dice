@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  liars-dice:
+    image: kvozt/linera-dev:latest
+    container_name: liars-dice
+    ports:
+      - "5173:5173"  # Player A frontend
+      - "5174:5174"  # Player B frontend
+      - "8081:8081"  # Service A (Player A)
+      - "8082:8082"  # Service B (Player B)
+      - "8083:8083"  # Lobby/Master service
+    volumes:
+      - C:/Users/prate/Downloads/new prejt or buildahtin/liars-dice:/build
+    working_dir: /build
+    command: bash /build/docker-run.sh
+    environment:
+      - RUST_LOG=info
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

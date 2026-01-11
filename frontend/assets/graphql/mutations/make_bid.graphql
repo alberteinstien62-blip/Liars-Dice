@@ -1,0 +1,3 @@
+mutation MakeBid($quantity: Int!, $face: Int!) {
+  makeBid(quantity: $quantity, face: $face)
+}
