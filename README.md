@@ -287,12 +287,4 @@ Frontend config files are generated at `frontend/web_*/config.json`:
 - `STARTING_DICE = 5`: Dice per player
 - `REVEAL_TIMEOUT = 60s`: Time to reveal dice
 
-## License
-
-MIT License - See LICENSE file for details.
-
-## Acknowledgments
-
-Built for the **WaveHack Linera Buildathon 2025**.
-
 Special thanks to the Linera team for their SDK and documentation.
