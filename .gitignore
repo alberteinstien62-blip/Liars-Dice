@@ -39,3 +39,10 @@ tests/e2e/*.png
 
 # Root level screenshots (keep docs/screenshots)
 /*.png
+
+# Flutter build artifacts
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+
+# Internal docs
+DEMO_VIDEO_SCRIPT.md
