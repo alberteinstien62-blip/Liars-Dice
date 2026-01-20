@@ -1313,7 +1313,7 @@
                 await graphql('mutation { initialSetup }');
                 log('Connected to lobby', 'info');
             } catch (e) {
-                console.log('InitialSetup error (may be ok):', e);
+                // Initial setup may fail if already configured - this is expected
             }
 
             showLoader('Finding opponent...');

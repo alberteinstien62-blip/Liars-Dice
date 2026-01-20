@@ -98,8 +98,7 @@ impl Contract for LiarsDiceContract {
             // USER CHAIN OPERATIONS
             // ============================================
             LiarsDiceOperation::SetProfile { name } => {
-                // NOTE: Chain type check disabled for demo flexibility
-                // // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
                 let owner = self.runtime.authenticated_signer().expect("No authenticated signer");
                 let timestamp = self.runtime.system_time();
@@ -117,8 +116,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::FindMatch {} => {
-                // NOTE: Chain type check disabled for demo flexibility
-                // // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let profile = self.state.user_profile.get()
                     .as_ref()
                     .expect("Profile not set");
@@ -145,8 +143,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::CancelMatch {} => {
-                // NOTE: Chain type check disabled for demo flexibility
-                // // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
 
                 if let Some(lobby_chain) = self.state.lobby_chain.get().as_ref() {
@@ -163,7 +160,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::CommitDice { commitment } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
 
                 if let Some(game_chain) = self.state.user_game_chain.get().as_ref() {
@@ -180,7 +177,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::RevealDice { dice, salt } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
 
                 // Create PlayerDice from bytes
@@ -201,7 +198,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::MakeBid { quantity, face } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
                 let timestamp = self.runtime.system_time();
 
@@ -233,7 +230,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::CallLiar {} => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
 
                 if let Some(game_chain) = self.state.user_game_chain.get().as_ref() {
@@ -245,7 +242,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::ExitGame {} => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let chain_id = self.runtime.chain_id();
 
                 if let Some(game_chain) = self.state.user_game_chain.get().as_ref() {
@@ -262,14 +259,14 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::GetBalance {} => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let balance = self.bankroll_get_balance();
                 self.state.user_balance.set(balance);
                 log::info!("GetBalance called - user balance: {}", balance);
             }
 
             LiarsDiceOperation::InitialSetup {} => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 
                 // Get lobby chain from parameters and set it in state
                 let lobby_chain = self.get_lobby_chain();
@@ -282,7 +279,7 @@ impl Contract for LiarsDiceContract {
             // GAME CHAIN OPERATIONS
             // ============================================
             LiarsDiceOperation::CheckTimeout {} => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Checking for reveal timeout");
 
                 let current_time = self.runtime.system_time();
@@ -341,7 +338,7 @@ impl Contract for LiarsDiceContract {
             // MASTER CHAIN OPERATIONS
             // ============================================
             LiarsDiceOperation::AddLobbyChain { chain_id } => {
-                // DEMO: self.assert_master_chain(chain_type);
+                self.assert_master_chain(chain_type);
                 log::info!("Adding lobby chain: {:?}", chain_id);
 
                 let info = abi::management::LobbyChainInfo::new(chain_id, self.runtime.system_time());
@@ -349,7 +346,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::AddGameChain { chain_id } => {
-                // DEMO: self.assert_master_chain(chain_type);
+                self.assert_master_chain(chain_type);
                 log::info!("Adding game chain: {:?}", chain_id);
 
                 // Get all lobby chains and send to them
@@ -363,7 +360,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceOperation::MintToken { chain_id, amount } => {
-                // DEMO: self.assert_master_chain(chain_type);
+                self.assert_master_chain(chain_type);
                 log::info!("MintToken: {:?} amount: {}", chain_id, amount);
                 self.bankroll_mint_token(chain_id, amount);
             }
@@ -401,7 +398,7 @@ impl Contract for LiarsDiceContract {
                 opponent_name,
                 opponent_elo,
             } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!(
                     "Match found! Game: {}, Opponent: {} (ELO: {})",
                     game_id, opponent_name, opponent_elo
@@ -419,7 +416,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::GameStarted { game } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!("Game started: {:?}", game.game_id);
                 self.state.channel_game_state.set(Some(game.clone()));
 
@@ -465,13 +462,13 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::BidMade { game, bidder, bid } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!("Bid made by {:?}: {} x {}", bidder, bid.quantity, bid.face.value());
                 self.state.channel_game_state.set(Some(game));
             }
 
             LiarsDiceMessage::LiarCalled { game, caller } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!("Liar called by {:?}", caller);
                 self.state.channel_game_state.set(Some(game));
 
@@ -504,7 +501,7 @@ impl Contract for LiarsDiceContract {
                 actual_count,
                 bid_was_valid: _,
             } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!("Round result: loser {:?}, actual count: {}", loser, actual_count);
                 self.state.channel_game_state.set(Some(game.clone()));
 
@@ -573,7 +570,7 @@ impl Contract for LiarsDiceContract {
                 loser: _,
                 elo_change,
             } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 let my_chain = self.runtime.chain_id();
                 let won = winner == my_chain;
 
@@ -597,7 +594,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::LobbyInfo { lobby_chain } => {
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
                 log::info!("Received lobby chain info: {:?}", lobby_chain);
                 self.state.lobby_chain.set(Some(lobby_chain));
 
@@ -611,14 +608,14 @@ impl Contract for LiarsDiceContract {
             LiarsDiceMessage::ProfileUpdated { profile: _ } |
             LiarsDiceMessage::RevealRequired { deadline: _ } => {
                 // Handle other user chain messages
-                // DEMO: self.assert_user_chain(chain_type);
+                self.assert_user_chain(chain_type);
             }
 
             // ============================================
             // LOBBY CHAIN MESSAGES
             // ============================================
             LiarsDiceMessage::FindMatch { player } => {
-                // DEMO: self.assert_lobby_chain(chain_type);
+                self.assert_lobby_chain(chain_type);
                 log::info!("Player {:?} looking for match", player.chain_id);
 
                 // Add to queue (not async in QueueView)
@@ -637,7 +634,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::CancelMatch { player_chain } => {
-                // DEMO: self.assert_lobby_chain(chain_type);
+                self.assert_lobby_chain(chain_type);
                 log::info!("Player {:?} cancelling match", player_chain);
 
                 // ✅ FIX: Optimized queue removal - collect all players first to minimize async calls
@@ -687,7 +684,7 @@ impl Contract for LiarsDiceContract {
                 winner: _,
                 loser: _,
             } => {
-                // DEMO: self.assert_lobby_chain(chain_type);
+                self.assert_lobby_chain(chain_type);
                 log::info!("Game ended on {:?}", game_chain);
 
                 // Return game chain to pool
@@ -696,7 +693,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::RegisterGameChain { chain_id } => {
-                // DEMO: self.assert_lobby_chain(chain_type);
+                self.assert_lobby_chain(chain_type);
                 log::info!("Registering game chain: {:?}", chain_id);
                 self.state.available_game_chains.push_back(chain_id);
             }
@@ -709,7 +706,7 @@ impl Contract for LiarsDiceContract {
                 player1,
                 player2,
             } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Assigned match {} with players", game_id);
 
                 // Create new game
@@ -743,7 +740,7 @@ impl Contract for LiarsDiceContract {
                 player_chain,
                 commitment,
             } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Received commitment from {:?}", player_chain);
 
                 if let Some(ref mut game) = *self.state.current_game.get_mut() {
@@ -775,7 +772,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::MakeBid { player_chain, bid } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Bid from {:?}: {} x {}", player_chain, bid.quantity, bid.face.value());
 
                 // Collect data while holding mutable borrow, then release it
@@ -823,7 +820,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::CallLiar { player_chain } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Liar called by {:?}", player_chain);
 
                 let timestamp = self.runtime.system_time();
@@ -878,7 +875,7 @@ impl Contract for LiarsDiceContract {
                 player_chain,
                 reveal,
             } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Reveal from {:?}", player_chain);
 
                 let should_resolve = {
@@ -934,7 +931,7 @@ impl Contract for LiarsDiceContract {
             }
 
             LiarsDiceMessage::PlayerForfeit { player_chain } => {
-                // DEMO: self.assert_game_chain(chain_type);
+                self.assert_game_chain(chain_type);
                 log::info!("Player {:?} forfeited", player_chain);
 
                 // Eliminate the forfeiting player
@@ -1060,7 +1057,7 @@ impl Contract for LiarsDiceContract {
             // MASTER CHAIN MESSAGES
             // ============================================
             LiarsDiceMessage::RequestLobbyInfo { user_chain } => {
-                // DEMO: self.assert_master_chain(chain_type);
+                self.assert_master_chain(chain_type);
                 log::info!("Lobby info requested by {:?}", user_chain);
 
                 // Get first lobby chain and send to user
@@ -1081,7 +1078,7 @@ impl Contract for LiarsDiceContract {
                 loser_name,
                 loser_new_elo,
             } => {
-                // DEMO: self.assert_master_chain(chain_type);
+                self.assert_master_chain(chain_type);
                 log::info!("Updating leaderboard - Winner: {} (ELO: {}), Loser: {} (ELO: {})",
                     winner_name, winner_new_elo, loser_name, loser_new_elo);
 

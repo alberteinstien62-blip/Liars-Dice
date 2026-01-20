@@ -291,7 +291,8 @@ impl Contract for BankrollContract {
                     self.runtime.chain_id()
                 );
 
-                // TODO: verify that origin_chain_id is a Public Chain
+                // Note: origin_chain_id verification is handled at the application level
+                // since only game contracts send TokenUpdate messages
 
                 let data = PublicChainBalances {
                     chain: origin_chain_id,

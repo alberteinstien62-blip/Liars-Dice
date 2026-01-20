@@ -1,0 +1,12 @@
+{
+  "name": "liars-dice-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for Liar's Dice blockchain game",
+  "scripts": {
+    "test:e2e": "node tests/e2e/playwright-complete-game.js",
+    "test": "npm run test:e2e"
+  },
+  "devDependencies": {
+    "playwright": "^1.57.0"
+  }
+}

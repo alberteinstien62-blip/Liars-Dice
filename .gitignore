@@ -25,3 +25,17 @@ frontend/.packages
 # Temp files
 *.tmp
 *~
+nul
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+build_output.txt
+
+# Test screenshots
+tests/e2e/*.png
+
+# Root level screenshots (keep docs/screenshots)
+/*.png
