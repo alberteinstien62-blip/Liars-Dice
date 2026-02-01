@@ -265,14 +265,18 @@ impl Contract for LiarsDiceContract {
                 log::info!("GetBalance called - user balance: {}", balance);
             }
 
-            LiarsDiceOperation::InitialSetup {} => {
-                self.assert_user_chain(chain_type);
-                
-                // Get lobby chain from parameters and set it in state
-                let lobby_chain = self.get_lobby_chain();
+            LiarsDiceOperation::InitialSetup { lobby_chain } => {
+                // First-time setup: set chain_type to User (3) if not already set
+                if chain_type == 0 {
+                    self.state.chain_type.set(3);
+                    log::info!("InitialSetup: Set chain_type to User (3)");
+                }
+
+                // Store the lobby chain provided by the frontend config
                 self.state.lobby_chain.set(Some(lobby_chain));
-                
-                log::info!("InitialSetup: Configured lobby chain {} from parameters", lobby_chain);
+                self.state.cached_lobby_chain.set(Some(lobby_chain));
+
+                log::info!("InitialSetup: Configured lobby chain {}", lobby_chain);
             }
 
             // ============================================
@@ -423,19 +427,20 @@ impl Contract for LiarsDiceContract {
                 // Generate dice and salt for this round
                 let chain_id = self.runtime.chain_id();
                 let timestamp = self.runtime.system_time();
-                let timestamp_str = timestamp.micros().to_string();
-                let chain_hash = format!("{:?}", chain_id);
+                let nonce = *self.state.rng_nonce.get();
+                // Mix private nonce into seed so observers can't predict dice
+                let seed_str = format!("{:?}_{}_{}", chain_id, timestamp.micros(), nonce);
+                self.state.rng_nonce.set(nonce + 1);
 
                 // Generate 5 random dice (values 1-6)
-                // ✅ FIX: Fail fast if RNG fails - no predictable fallback
-                let dice_values = roll_dice(5, chain_hash.clone(), timestamp_str.clone())
+                let dice_values = roll_dice(5, seed_str.clone(), String::new())
                     .expect("Failed to generate dice. Game cannot start with predictable dice.");
 
                 let player_dice = PlayerDice::from_bytes(&dice_values)
                     .expect("Failed to parse dice values");
 
                 // Generate salt for commitment - CRITICAL for security
-                let salt = generate_random_salt(chain_hash, timestamp_str)
+                let salt = generate_random_salt(seed_str, String::new())
                     .expect("Failed to generate salt. Cannot proceed without secure randomness.");
 
                 // Store dice and salt privately (NEVER sent to other chains)
@@ -511,14 +516,11 @@ impl Contract for LiarsDiceContract {
 
                     let chain_id = self.runtime.chain_id();
                     let timestamp = self.runtime.system_time();
-                    let timestamp_str = timestamp.micros().to_string();
-                    let chain_hash = format!("{:?}", chain_id);
+                    let nonce = *self.state.rng_nonce.get();
+                    let round_seed = format!("{:?}_{}_{}_round_{}", chain_id, timestamp.micros(), nonce, game.round);
+                    self.state.rng_nonce.set(nonce + 1);
 
-                    // Add round number to seed for unique dice each round
-                    let round_seed = format!("{}_round_{}", chain_hash, game.round);
-
-
-                    // ✅ FIX: Get player's actual dice count from game state (not hardcoded 5)
+                    // Get player's actual dice count from game state (not hardcoded 5)
                     let my_dice_count = game.players.iter()
                         .find(|p| p.chain_id == Some(chain_id))
                         .map(|p| p.dice_count)
@@ -531,14 +533,14 @@ impl Contract for LiarsDiceContract {
                     }
 
                     // Generate dice matching player's current count
-                    let dice_values = roll_dice(my_dice_count, round_seed.clone(), timestamp_str.clone())
+                    let dice_values = roll_dice(my_dice_count, round_seed.clone(), String::new())
                         .expect("Failed to generate dice for new round");
 
                     let player_dice = PlayerDice::from_bytes(&dice_values)
                         .expect("Failed to parse dice values");
 
                     // Generate new salt for this round
-                    let salt = generate_random_salt(round_seed, timestamp_str)
+                    let salt = generate_random_salt(round_seed, String::new())
                         .expect("Failed to generate salt for new round");
 
                     // Store dice and salt privately
@@ -1225,12 +1227,20 @@ impl LiarsDiceContract {
 
     /// Assert this is a lobby chain
     fn assert_lobby_chain(&self, chain_type: u64) {
-        assert_eq!(chain_type, 1, "This operation requires a Lobby chain (type 1)");
+        assert!(
+            chain_type == 1 || chain_type == 0,
+            "This operation requires a Lobby chain (type 1) or Master chain (type 0), got type {}",
+            chain_type
+        );
     }
 
-    /// Assert this is a game chain
+    /// Assert this is a game chain (type 0 allowed for single-chain Docker deployment)
     fn assert_game_chain(&self, chain_type: u64) {
-        assert_eq!(chain_type, 2, "This operation requires a Game chain (type 2)");
+        assert!(
+            chain_type == 2 || chain_type == 0,
+            "This operation requires a Game chain (type 2) or Master chain (type 0), got type {}",
+            chain_type
+        );
     }
 
     // ============================================

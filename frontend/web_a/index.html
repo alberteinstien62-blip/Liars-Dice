@@ -958,9 +958,98 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.2); }
         }
+
+        /* TOAST NOTIFICATION SYSTEM */
+        .toast-container {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 10002;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s forwards;
+            pointer-events: auto;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .toast.success { background: rgba(34,197,94,0.9); color: white; }
+        .toast.error { background: rgba(239,68,68,0.9); color: white; }
+        .toast.info { background: rgba(59,130,246,0.9); color: white; }
+        .toast.warning { background: rgba(245,158,11,0.9); color: #1a1a1a; }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+        /* DICE COMMIT CONFIRMATION */
+        @keyframes commitConfirm {
+            0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.6); }
+            70% { box-shadow: 0 0 0 20px rgba(212,175,55,0); }
+            100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+        }
+        .die.confirmed { animation: commitConfirm 0.8s ease-out; }
+
+        /* LATENCY DISPLAY */
+        .latency-display {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(212,175,55,0.2);
+            color: rgba(255,254,242,0.5);
+        }
+        .latency-display .latency-value { font-weight: 600; }
+        .latency-display .latency-value.good { color: var(--success); }
+        .latency-display .latency-value.medium { color: var(--warning); }
+        .latency-display .latency-value.poor { color: var(--error); }
+
+        /* RECONNECTION OVERLAY */
+        .reconnect-overlay {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(239,68,68,0.9);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            z-index: 10001;
+            color: white;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        .reconnect-overlay.active { display: block; animation: toastIn 0.3s ease-out; }
+
+        /* ENHANCED LOADER */
+        .loader-container .dice-loader {
+            filter: drop-shadow(0 0 20px var(--glow-gold));
+        }
+        .loader-text {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="latency-display">Latency: <span class="latency-value" id="latencyValue">--</span>ms</div>
+    <div class="reconnect-overlay" id="reconnectOverlay">Reconnecting... <span id="reconnectCountdown"></span></div>
+
     <!-- Floating Particles -->
     <div class="particles" id="particles"></div>
 
@@ -1125,7 +1214,7 @@
             } else if (gs.phase === 'Revealing') {
                 banner.textContent = 'Revealing Dice...';
                 banner.classList.add('waiting');
-            } else if (gs.phase === 'Finished') {
+            } else if (gs.phase === 'GameOver') {
                 const myIdx = getMyPlayerIndex(gs.players);
                 const won = myIdx !== -1 && !gs.players[myIdx].eliminated;
                 if (won) {
@@ -1255,23 +1344,40 @@
             }
         }
 
+        var _gqlBusy = false;
+
+        function _isLocal() {
+            return config.nodeServiceURL.includes('localhost') || config.nodeServiceURL.includes('127.0.0.1');
+        }
+
         async function graphql(mutation, showLoading) {
-            const url = config.nodeServiceURL + '/chains/' + config.userChain + '/applications/' + config.liarsDiceAppId;
+            // Serialize requests to prevent concurrent chain operations
+            while (_gqlBusy) {
+                await new Promise(function(r) { setTimeout(r, 200); });
+            }
+            _gqlBusy = true;
+            var chainPath = '/chains/' + config.userChain + '/applications/' + config.liarsDiceAppId;
+            var isLocal = _isLocal();
+            var fetchUrl = isLocal ? (config.nodeServiceURL + chainPath) : '/api/proxy';
+            var fetchBody = isLocal
+                ? JSON.stringify({ query: mutation })
+                : JSON.stringify({ targetUrl: config.nodeServiceURL + chainPath, query: mutation });
             try {
                 if (showLoading) showLoader('Processing...');
-                const controller = new AbortController();
-                const timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+                var controller = new AbortController();
+                var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
 
-                const response = await fetch(url, {
+                var response = await fetch(fetchUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: mutation }),
+                    body: fetchBody,
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
 
-                const data = await response.json();
+                var data = await response.json();
                 if (data.errors) throw new Error(data.errors[0].message);
+                if (data.error) throw new Error(Array.isArray(data.error) ? data.error[0] : data.error);
                 updateConnectionStatus(true);
                 if (showLoading) hideLoader();
                 return data;
@@ -1284,6 +1390,8 @@
                     log('GraphQL Error: ' + error.message, 'error');
                 }
                 throw error;
+            } finally {
+                _gqlBusy = false;
             }
         }
 
@@ -1301,25 +1409,56 @@
 
         async function initialSetup() {
             showLoader('Connecting to lobby...');
-            await graphql('mutation { initialSetup }');
+            await graphql('mutation { initialSetup(lobbyChain: "' + config.lobbyChain + '") }');
             hideLoader();
             log('Connected to lobby', 'success');
         }
 
         async function findMatch() {
+            // STEP 1: InitialSetup MUST run first - sets chain_type from 0 (Master) to 3 (User)
+            // on auto-instantiated player chains. Without this, SetProfile and FindMatch will
+            // panic with "This operation requires a User chain (type 3)"
             showLoader('Connecting to lobby...');
-            // Always call initialSetup first to ensure lobby_chain is configured
             try {
-                await graphql('mutation { initialSetup }');
+                await graphql('mutation { initialSetup(lobbyChain: "' + config.lobbyChain + '") }');
                 log('Connected to lobby', 'info');
-            } catch (e) {
-                console.log('InitialSetup error (may be ok):', e);
+            } catch (e) { /* may already be configured */ }
+
+            await new Promise(function(r) { setTimeout(r, 1500); });
+
+            // STEP 2: Create profile (now chain_type is 3, so assert_user_chain passes)
+            var name = document.getElementById('playerName').value.trim();
+            if (name) {
+                var safeName = name.replace(/["\\\n\r]/g, '').substring(0, 20);
+                if (safeName) {
+                    showLoader('Creating profile...');
+                    try {
+                        await graphql('mutation { setProfile(name: ' + JSON.stringify(safeName) + ') }');
+                        log('Profile created: ' + safeName, 'success');
+                    } catch (e) { /* profile may exist */ }
+                    await new Promise(function(r) { setTimeout(r, 1500); });
+                }
             }
 
-            showLoader('Finding opponent...');
-            await graphql('mutation { findMatch }');
+            // STEP 3: Find match
+            showLoader('Waiting for lobby sync...');
+            await new Promise(function(r) { setTimeout(r, 1500); });
+
+            var matched = false;
+            for (var attempt = 1; attempt <= 3; attempt++) {
+                showLoader('Finding opponent... (' + attempt + '/3)');
+                try {
+                    await graphql('mutation { findMatch }');
+                    matched = true;
+                    break;
+                } catch (e) {
+                    log('Attempt ' + attempt + ' failed, retrying...', 'warning');
+                    if (attempt < 3) await new Promise(function(r) { setTimeout(r, 2000); });
+                }
+            }
             hideLoader();
-            log('Looking for match...', 'warning');
+            if (matched) { log('Looking for match...', 'warning'); }
+            else { log('Failed to join matchmaking. Try again.', 'error'); }
         }
 
         async function cancelMatch() {
@@ -1466,7 +1605,7 @@
 
                 // Check for phase changes
                 if (lastGamePhase !== gameState.phase) {
-                    if (gameState.phase === 'Finished') {
+                    if (gameState.phase === 'GameOver') {
                         const activePlayers = gameState.players.filter(function(p) { return !p.eliminated; });
                         if (activePlayers.length === 1) {
                             const winnerId = activePlayers[0].chainId;
@@ -1578,6 +1717,109 @@
 
             while (logDiv.children.length > 50) logDiv.removeChild(logDiv.lastChild);
         }
+
+        // ====================================
+        // TOAST NOTIFICATION SYSTEM
+        // ====================================
+        function showToast(message, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+
+        // ====================================
+        // LATENCY TRACKING
+        // ====================================
+        var _lastLatency = 0;
+        var _origGraphql = graphql;
+        graphql = async function(mutation, showLoading) {
+            var start = performance.now();
+            try {
+                var result = await _origGraphql(mutation, showLoading);
+                _lastLatency = Math.round(performance.now() - start);
+                updateLatencyDisplay(_lastLatency);
+                return result;
+            } catch(e) {
+                _lastLatency = Math.round(performance.now() - start);
+                updateLatencyDisplay(_lastLatency);
+                throw e;
+            }
+        };
+
+        function updateLatencyDisplay(ms) {
+            var el = document.getElementById('latencyValue');
+            if (!el) return;
+            el.textContent = ms;
+            el.className = 'latency-value ' + (ms < 200 ? 'good' : ms < 500 ? 'medium' : 'poor');
+        }
+
+        // ====================================
+        // AUTO-RECONNECTION WITH EXPONENTIAL BACKOFF
+        // ====================================
+        var _reconnectAttempt = 0;
+        var _reconnectTimer = null;
+        var MAX_RECONNECT_ATTEMPTS = 5;
+
+        function startReconnection() {
+            if (_reconnectAttempt >= MAX_RECONNECT_ATTEMPTS) {
+                showToast('Connection lost. Please refresh the page.', 'error');
+                return;
+            }
+            _reconnectAttempt++;
+            var delay = Math.pow(2, _reconnectAttempt - 1) * 1000;
+            var overlay = document.getElementById('reconnectOverlay');
+            var countdown = document.getElementById('reconnectCountdown');
+            if (overlay) overlay.classList.add('active');
+
+            var remaining = Math.ceil(delay / 1000);
+            if (countdown) countdown.textContent = '(' + remaining + 's)';
+            _reconnectTimer = setInterval(function() {
+                remaining--;
+                if (countdown) countdown.textContent = '(' + remaining + 's)';
+                if (remaining <= 0) {
+                    clearInterval(_reconnectTimer);
+                    attemptReconnect();
+                }
+            }, 1000);
+        }
+
+        async function attemptReconnect() {
+            try {
+                await loadConfig();
+                _reconnectAttempt = 0;
+                var overlay = document.getElementById('reconnectOverlay');
+                if (overlay) overlay.classList.remove('active');
+                showToast('Reconnected!', 'success');
+            } catch(e) {
+                startReconnection();
+            }
+        }
+
+        var _origUpdateConnection = updateConnectionStatus;
+        updateConnectionStatus = function(connected) {
+            _origUpdateConnection(connected);
+            if (!connected && _reconnectAttempt === 0) {
+                startReconnection();
+            } else if (connected) {
+                _reconnectAttempt = 0;
+                if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
+                var overlay = document.getElementById('reconnectOverlay');
+                if (overlay) overlay.classList.remove('active');
+            }
+        };
+
+        // Enhance log function to also show toasts for important events
+        var _origLog = log;
+        log = function(message, type) {
+            _origLog(message, type);
+            if (type === 'error') showToast(message, 'error');
+            else if (type === 'success' && message.includes('match')) showToast(message, 'success');
+        };
 
         // Initialize
         createParticles();

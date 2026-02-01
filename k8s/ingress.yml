@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: liars-dice-ingress
+  namespace: liars-dice
+  labels:
+    app: liars-dice
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/websocket-services: "service-a,service-b,lobby-service"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: liars-dice.example.com
+      http:
+        paths:
+          # Player A frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service-a
+                port:
+                  number: 5173
+          # Player B frontend
+          - path: /player-b
+            pathType: Prefix
+            backend:
+              service:
+                name: service-b
+                port:
+                  number: 5174
+          # GraphQL service A
+          - path: /api/service-a
+            pathType: Prefix
+            backend:
+              service:
+                name: service-a
+                port:
+                  number: 8081
+          # GraphQL service B
+          - path: /api/service-b
+            pathType: Prefix
+            backend:
+              service:
+                name: service-b
+                port:
+                  number: 8082
+          # Lobby/Master service
+          - path: /api/lobby
+            pathType: Prefix
+            backend:
+              service:
+                name: lobby-service
+                port:
+                  number: 8083

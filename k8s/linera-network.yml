@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: linera-network
+  namespace: liars-dice
+  labels:
+    app: liars-dice
+    component: linera-network
+spec:
+  serviceName: linera-network
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liars-dice
+      component: linera-network
+  template:
+    metadata:
+      labels:
+        app: liars-dice
+        component: linera-network
+    spec:
+      initContainers:
+        - name: network-setup
+          image: kvozt/linera-dev:latest
+          command: ["bash", "/build/docker-run.sh"]
+          envFrom:
+            - configMapRef:
+                name: liars-dice-config
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+            - name: app-source
+              mountPath: /build
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      containers:
+        - name: faucet
+          image: kvozt/linera-dev:latest
+          command: ["tail", "-f", "/dev/null"]
+          ports:
+            - containerPort: 8080
+              name: faucet
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+      volumes:
+        - name: app-source
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: chain-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi

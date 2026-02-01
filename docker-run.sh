@@ -3,6 +3,9 @@ set -eu
 
 echo "=== Starting Liar's Dice Docker Deployment ==="
 
+# Clean up any previous wallet/keystore from earlier runs
+rm -rf /root/.config/linera 2>/dev/null || true
+
 # Create a temp directory for linera network
 export LINERA_TMP=$(mktemp -d)
 echo "Using temp directory: $LINERA_TMP"
@@ -35,6 +38,7 @@ echo "✅ Network is ready!"
 # Create a SEPARATE wallet for deployment (network holds lock on wallet_0)
 export DEPLOY_DIR=$(mktemp -d)
 export LINERA_WALLET="$DEPLOY_DIR/wallet.json"
+export LINERA_KEYSTORE="$DEPLOY_DIR/keystore.json"
 export LINERA_STORAGE="rocksdb:$DEPLOY_DIR/client.db"
 
 echo "🔑 Creating deployment wallet via faucet..."
@@ -148,14 +152,14 @@ if [ -z "$LIARS_DICE_ID" ]; then
 fi
 echo "✅ Liar's Dice app ID: $LIARS_DICE_ID"
 
-# Request app on player chains (will auto-instantiate)
-echo "📤 Requesting app on Player A chain..."
+# Process inbox on player chains to pick up cross-chain messages and auto-instantiate the app
+echo "📥 Processing inbox on Player A chain..."
 LINERA_WALLET="$PLAYER_A_WALLET" LINERA_KEYSTORE="$PLAYER_A_KEYSTORE" LINERA_STORAGE="$PLAYER_A_STORAGE" \
-  linera request-application "$LIARS_DICE_ID" 2>&1 || echo "App may already be available"
+  linera process-inbox 2>&1 || echo "Player A inbox processing skipped"
 
-echo "📤 Requesting app on Player B chain..."
+echo "📥 Processing inbox on Player B chain..."
 LINERA_WALLET="$PLAYER_B_WALLET" LINERA_KEYSTORE="$PLAYER_B_KEYSTORE" LINERA_STORAGE="$PLAYER_B_STORAGE" \
-  linera request-application "$LIARS_DICE_ID" 2>&1 || echo "App may already be available"
+  linera process-inbox 2>&1 || echo "Player B inbox processing skipped"
 
 # Create frontend configs with player-specific chains
 echo "📝 Creating frontend configs..."

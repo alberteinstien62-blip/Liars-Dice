@@ -70,6 +70,9 @@ pub struct LiarsDiceState {
     pub user_balance: RegisterView<Amount>,
     /// Last received game state (from event subscription)
     pub channel_game_state: RegisterView<Option<LiarsDiceGame>>,
+    /// Private nonce for RNG entropy (incremented each dice generation)
+    #[graphql(skip)]
+    pub rng_nonce: RegisterView<u64>,
 
     // ============================================
     // PARAMETERS (ALL CHAINS) - Cached to avoid runtime.application_parameters() in Linera 0.15.7

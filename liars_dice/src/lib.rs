@@ -55,8 +55,8 @@ pub enum LiarsDiceOperation {
     ExitGame {},
     /// Get balance from bankroll
     GetBalance {},
-    /// Initial setup - subscribe to lobby
-    InitialSetup {},
+    /// Initial setup - configure user chain and subscribe to lobby
+    InitialSetup { lobby_chain: ChainId },
 
     // ============================================
     // LOBBY CHAIN OPERATIONS (instantiate_value = 1)

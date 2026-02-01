@@ -160,7 +160,7 @@ impl Contract for BankrollContract {
                     self.runtime.chain_id(),
                     amount
                 );
-                let current_token = self.state.blackjack_token.get_mut();
+                let current_token = self.state.game_token.get_mut();
                 let previous_balance = *current_token;
                 current_token.saturating_add_assign(amount);
                 log::info!("Token balance updated: {} -> {}", previous_balance, current_token);
@@ -176,7 +176,7 @@ impl Contract for BankrollContract {
                 );
 
                 // Verify we have sufficient tokens
-                let current_token = self.state.blackjack_token.get();
+                let current_token = self.state.game_token.get();
                 log::info!("Current token pool before debt payment: {}", current_token);
                 assert!(
                     *current_token >= amount,
@@ -185,10 +185,10 @@ impl Contract for BankrollContract {
                     amount
                 );
 
-                // Subtract the debt amount from blackjack_token pool
+                // Subtract the debt amount from game_token pool
                 let current_token_log = current_token.clone();
                 let remaining_token = current_token.saturating_sub(amount);
-                self.state.blackjack_token.set(remaining_token);
+                self.state.game_token.set(remaining_token);
 
                 log::info!(
                     "Debt payment processed. Token pool: {} -> {}. Sending DebtPaid to {:?}",
@@ -227,8 +227,8 @@ impl Contract for BankrollContract {
                     self.runtime.chain_id()
                 );
 
-                // Add the pot amount to blackjack_token pool
-                let current_token = self.state.blackjack_token.get_mut();
+                // Add the pot amount to game_token pool
+                let current_token = self.state.game_token.get_mut();
                 current_token.saturating_add_assign(amount);
 
                 // Create token pot record for history

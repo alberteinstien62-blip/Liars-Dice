@@ -6,7 +6,7 @@ use linera_sdk::views::{linera_views, MapView, RegisterView, RootView, ViewStora
 #[view(context = ViewStorageContext)]
 pub struct BankrollState {
     // All Chain
-    pub blackjack_token: RegisterView<Amount>,
+    pub game_token: RegisterView<Amount>,
     pub debt_log: MapView<u64, DebtRecord>,
     // Public Chain
     pub token_pot_log: MapView<u64, TokenPotRecord>,

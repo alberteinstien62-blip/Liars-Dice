@@ -4,7 +4,6 @@ mod state;
 
 use std::sync::Arc;
 
-use abi::dice::PlayerDice;
 use abi::game::LiarsDiceGame;
 use abi::leaderboard::SimpleLeaderboardEntry;
 use abi::player::PlayerProfile;
@@ -79,15 +78,9 @@ impl QueryRoot {
         self.state.user_profile.get().clone()
     }
 
-    /// Get the user's dice (only available on user chain, used for reveal)
-    async fn get_user_dice(&self) -> Option<PlayerDice> {
-        self.state.user_dice.get().clone()
-    }
-
-    /// Get the user's salt (only available on user chain, used for reveal)
-    async fn get_user_salt(&self) -> Option<Vec<u8>> {
-        self.state.user_salt.get().map(|s| s.to_vec())
-    }
+    // NOTE: get_user_dice and get_user_salt intentionally removed
+    // Dice and salt are private state used only by the auto-reveal mechanism
+    // Exposing them via GraphQL would let opponents read your hand
 
     /// Get the current game state (from subscription)
     async fn get_game_state(&self) -> Option<LiarsDiceGame> {

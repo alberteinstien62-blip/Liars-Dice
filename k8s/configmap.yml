@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: liars-dice-config
+  namespace: liars-dice
+  labels:
+    app: liars-dice
+data:
+  LINERA_IMAGE: "kvozt/linera-dev:latest"
+  RUST_LOG: "info"
+  PRNG_SEED: "37"
+  INITIAL_CHAINS: "3"
+  FAUCET_PORT: "8080"
+  NETWORK_READY_TIMEOUT: "180"
+  BONUS_AMOUNT: "25000"
+  SERVICE_PORT_A: "8081"
+  SERVICE_PORT_B: "8082"
+  LOBBY_SERVICE_PORT: "8083"
+  FRONTEND_PORT_A: "5173"
+  FRONTEND_PORT_B: "5174"

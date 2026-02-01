@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b
+  namespace: liars-dice
+  labels:
+    app: liars-dice
+    component: service-b
+    role: player-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liars-dice
+      component: service-b
+  template:
+    metadata:
+      labels:
+        app: liars-dice
+        component: service-b
+        role: player-b
+    spec:
+      containers:
+        - name: linera-service
+          image: kvozt/linera-dev:latest
+          command: ["linera", "service", "--port", "8082"]
+          ports:
+            - containerPort: 8082
+              name: graphql
+          envFrom:
+            - configMapRef:
+                name: liars-dice-config
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8082
+            initialDelaySeconds: 15
+            periodSeconds: 5
+        - name: frontend
+          image: python:3.11-slim
+          command: ["python3", "-m", "http.server", "5174", "--directory", "/app"]
+          ports:
+            - containerPort: 5174
+              name: http
+          volumeMounts:
+            - name: frontend-files
+              mountPath: /app
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      volumes:
+        - name: frontend-files
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+  namespace: liars-dice
+  labels:
+    app: liars-dice
+    component: service-b
+spec:
+  selector:
+    app: liars-dice
+    component: service-b
+  ports:
+    - name: graphql
+      port: 8082
+      targetPort: 8082
+    - name: frontend
+      port: 5174
+      targetPort: 5174
+  type: ClusterIP

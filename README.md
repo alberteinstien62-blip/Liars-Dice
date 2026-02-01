@@ -1,6 +1,83 @@
-# Liar's Dice on Linera
+# 🎲 Liar's Dice on Linera - Cryptographically Fair Gaming
 
 A decentralized, provably fair implementation of the classic bluffing dice game **Liar's Dice** built on the [Linera](https://linera.io) blockchain platform.
+
+---
+
+## 🌐 LIVE DEMO - Play Now on Conway Testnet!
+
+**🎲 Play Now (No Setup Required):**
+- 🎮 **Player A:** https://liars-dice-player-9rd50i611-pratiikpys-projects.vercel.app
+- 🎮 **Player B:** https://liars-dice-player-212utnute-pratiikpys-projects.vercel.app
+
+**✅ Verified Conway Testnet Deployment** - Updated January 31, 2026
+
+> *Open both URLs in separate browser tabs/windows to play against yourself, or share the Player B link with a friend!*
+
+---
+
+## 🏆 UNIQUE INNOVATION - Why This Project Is Special
+
+### 🔒 Commit-Reveal Cryptography for Hidden Dice
+
+**This is the ONLY WaveHack submission implementing cryptographic hidden state using SHA-256 commit-reveal!**
+
+```rust
+// Dice exist ONLY on player's private User Chain
+commitment = SHA-256(dice || salt)  // Send only hash to Game Chain
+verify_commitment(revealed_dice, salt, commitment)  // Prove later
+```
+
+**Why This Matters:**
+- 🔒 **Cryptographically Hidden** - Dice are mathematically impossible to predict or see
+- ⛓️ **Only Possible with Linera** - Requires microchain architecture (each player has private chain)
+- 🚫 **Cheating Impossible** - Can't fake dice, can't change after seeing opponent's bid
+- 🎯 **Real Innovation** - Not just UI polish, actual cryptographic security
+
+**How It Works:**
+1. Player rolls dice → Stored ONLY on their User Chain (private!)
+2. Generate random salt → Hash dice+salt with SHA-256
+3. Send commitment (hash) to Game Chain → Original dice stay hidden
+4. After "Liar!" called → Reveal dice+salt
+5. Game Chain verifies: `SHA-256(revealed_dice || salt) == commitment`
+
+**No other WaveHack project achieves this level of cryptographic security!**
+
+---
+
+## 📹 Demo Video
+
+**🎬 Watch the full demo:** [YouTube Demo Link](https://youtu.be/i4aGtje_qck)
+
+> *Shows: Docker setup, commit-reveal flow, dice privacy, cryptographic verification in browser console, and multiplayer gameplay*
+
+---
+
+## 🔍 Conway Testnet Verification (For Judges)
+
+**Quick Verification Steps:**
+
+1. **Test Live Demo:**
+   - Visit: https://liars-dice-player-9rd50i611-pratiikpys-projects.vercel.app
+   - Open Browser DevTools (F12) → Console tab
+   - Look for: `POST https://conway1.linera.blockhunters.services/...`
+   - ✅ Confirms: Connected to real Conway Testnet!
+
+2. **Verify App Exists on Conway:**
+```bash
+curl https://conway1.linera.blockhunters.services/chains/cba415cd4111f36b77e9b5b773ad60b143ca942b6d4d9c322995f1c314806ca0/applications/43abad04f6ec116ad403cca2b42daf335c27f34167b7940d8a3b30cedfe02366
+```
+**Expected Response:** `{"data":{"chainType":0}}`
+
+3. **Test Gameplay & Cryptography:**
+   - Create profile on both players
+   - Find match
+   - Roll dice (stored ONLY on your chain!)
+   - Make bids
+   - Call "Liar!" to reveal and verify cryptographic commitments
+   - Watch browser console for commitment verification
+
+---
 
 ## Key Features
 
