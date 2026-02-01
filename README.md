@@ -7,10 +7,10 @@ A decentralized, provably fair implementation of the classic bluffing dice game 
 ## 🌐 LIVE DEMO - Play Now on Conway Testnet!
 
 **🎲 Play Now (No Setup Required):**
-- 🎮 **Player A:** https://liars-dice-player-9rd50i611-pratiikpys-projects.vercel.app
-- 🎮 **Player B:** https://liars-dice-player-212utnute-pratiikpys-projects.vercel.app
+- 🎮 **Player A:** https://liars-dice-player-m7h6vc0v2-pratiikpys-projects.vercel.app
+- 🎮 **Player B:** https://liars-dice-player-6suv9mgjc-pratiikpys-projects.vercel.app
 
-**✅ Verified Conway Testnet Deployment** - Updated January 31, 2026
+**✅ Verified Conway Testnet Deployment** - Updated February 1, 2026
 
 > *Open both URLs in separate browser tabs/windows to play against yourself, or share the Player B link with a friend!*
 
