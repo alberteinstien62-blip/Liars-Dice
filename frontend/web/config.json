@@ -1,8 +1,0 @@
-{
-  "nodeServiceURL": "http://localhost:8094",
-  "liarsDiceAppId": "e94e5e94052475100eb117f4f43d77875c5471bc2054422ee8d5df87cb20d20e",
-  "bankrollAppId": "6ed077f5bbe4424b35ec6951342d5e7425ee1af37be06a6f669a2e860d83c31e",
-  "masterChain": "ac8125f9cba015182c71d1dac67211a65fb8f346ab852d3f0bb55a85f8a8b1cb",
-  "lobbyChain": "f958bfdd506b6862046d4f61f1df3bc681cddb9d8d3f49e0f70f18fcfa111711",
-  "userChain": "bf184f9514ec0d4fe53d13c26e37d09c1b8de0f032ebb6b8e694272ec08f864f"
-}

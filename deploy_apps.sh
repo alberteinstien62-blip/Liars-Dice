@@ -23,7 +23,7 @@ W2="$LINERA_TMP/wallet_2.json"
 S2="rocksdb:$LINERA_TMP/client_2.db"
 K2="$LINERA_TMP/keystore_2.json"
 
-cd "/mnt/c/Users/prate/Downloads/new prejt or buildahtin/liars-dice"
+cd "/build"
 
 echo ""
 echo "=== Deploying Bankroll ==="

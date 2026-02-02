@@ -14,14 +14,6 @@ frontend/web_b/config.json
 # Backup files
 *.bak
 *.backup
-*_fix.txt
-*_fix2.txt
-
-# Flutter build outputs
-frontend/.dart_tool/
-frontend/build/
-frontend/.packages
-
 # Temp files
 *.tmp
 *~
@@ -39,10 +31,3 @@ tests/e2e/*.png
 
 # Root level screenshots (keep docs/screenshots)
 /*.png
-
-# Flutter build artifacts
-frontend/.flutter-plugins
-frontend/.flutter-plugins-dependencies
-
-# Internal docs
-DEMO_VIDEO_SCRIPT.md

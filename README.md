@@ -58,7 +58,7 @@ verify_commitment(revealed_dice, salt, commitment)  // Prove later
 **Quick Verification Steps:**
 
 1. **Test Live Demo:**
-   - Visit: https://liars-dice-player-9rd50i611-pratiikpys-projects.vercel.app
+   - Visit: https://liars-dice-player-a.vercel.app
    - Open Browser DevTools (F12) → Console tab
    - Look for: `POST https://conway1.linera.blockhunters.services/...`
    - ✅ Confirms: Connected to real Conway Testnet!
